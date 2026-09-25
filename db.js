@@ -29,6 +29,8 @@ db.exec(`
     help_categories TEXT,
     expected_fee REAL DEFAULT 0,
     volunteer_status TEXT NOT NULL DEFAULT 'Inactive',
+    latitude REAL,
+    longitude REAL,
 
     FOREIGN KEY (user_id)
       REFERENCES users(user_id)
@@ -184,15 +186,53 @@ db.exec(`
     latitude REAL,
     longitude REAL
   );
+
+  CREATE TABLE IF NOT EXISTS emergency_requests (
+    emergency_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Active',
+    created_at TEXT NOT NULL,
+
+    FOREIGN KEY (user_id)
+      REFERENCES users(user_id)
+      ON DELETE SET NULL
+  );
 `);
 
-// Add role to existing database if the column does not exist.
+// Existing database migration: role
 try {
   db.prepare(
     "ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'User'"
   ).run();
 
   console.log('Role column added to users table.');
+} catch (error) {
+  if (!error.message.includes('duplicate column name')) {
+    throw error;
+  }
+}
+
+// Existing database migration: volunteer location
+try {
+  db.prepare(
+    'ALTER TABLE volunteers ADD COLUMN latitude REAL'
+  ).run();
+
+  console.log('Volunteer latitude column added.');
+} catch (error) {
+  if (!error.message.includes('duplicate column name')) {
+    throw error;
+  }
+}
+
+try {
+  db.prepare(
+    'ALTER TABLE volunteers ADD COLUMN longitude REAL'
+  ).run();
+
+  console.log('Volunteer longitude column added.');
 } catch (error) {
   if (!error.message.includes('duplicate column name')) {
     throw error;
