@@ -11,6 +11,9 @@ const authRoutes = require('./routes/auth_routes');
 const adminRoutes = require('./routes/admin_routes');
 const volunteerRoutes =
   require('./routes/volunteer_routes');
+  const helpRoutes = require('./routes/help_routes');
+
+app.use('/api/help', helpRoutes);
 
 // =========================
 // App
