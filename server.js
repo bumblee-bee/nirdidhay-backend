@@ -3,71 +3,44 @@ const cors = require('cors');
 
 const db = require('./db');
 
-// =========================
-// Routes
-// =========================
-
 const authRoutes = require('./routes/auth_routes');
 const adminRoutes = require('./routes/admin_routes');
-const volunteerRoutes =
-  require('./routes/volunteer_routes');
-  const helpRoutes = require('./routes/help_routes');
-
-app.use('/api/help', helpRoutes);
-
-// =========================
-// App
-// =========================
+const volunteerRoutes = require('./routes/volunteer_routes');
+const helpRoutes = require('./routes/help_routes');
 
 const app = express();
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// =========================
-// Middleware
-// =========================
+// ============================================================
+// MIDDLEWARE
+// ============================================================
 
 app.use(cors());
 
 app.use(express.json());
 
-// =========================
-// API Routes
-// =========================
+app.use(express.urlencoded({ extended: true }));
 
+// ============================================================
+// API ROUTES
+// ============================================================
+
+// Authentication
 app.use('/api/auth', authRoutes);
 
+// Admin
 app.use('/api/admin', adminRoutes);
 
+// Volunteer
 app.use('/api/volunteer', volunteerRoutes);
 
-// =========================
-// Database Test
-// =========================
+// Help / Emergency
+app.use('/api/help', helpRoutes);
 
-app.get('/api/db-test', (req, res) => {
-  try {
-    const result = db
-      .prepare('SELECT 1 AS connected')
-      .get();
-
-    res.json({
-      success: true,
-      database: result.connected === 1,
-      message: 'Nirdidhay database connected',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Database connection failed',
-      error: error.message,
-    });
-  }
-});
-
-// =========================
-// Backend Health Check
-// =========================
+// ============================================================
+// BACKEND HEALTH CHECK
+// ============================================================
 
 app.get('/', (req, res) => {
   res.json({
@@ -76,9 +49,9 @@ app.get('/', (req, res) => {
   });
 });
 
-// =========================
-// API Health Check
-// =========================
+// ============================================================
+// API HEALTH CHECK
+// ============================================================
 
 app.get('/api', (req, res) => {
   res.json({
@@ -87,12 +60,37 @@ app.get('/api', (req, res) => {
   });
 });
 
-// =========================
-// Start Server
-// =========================
+// ============================================================
+// 404 HANDLER
+// ============================================================
 
-app.listen(PORT, () => {
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found.',
+    path: req.originalUrl,
+  });
+});
+
+// ============================================================
+// ERROR HANDLER
+// ============================================================
+
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error.',
+  });
+});
+
+// ============================================================
+// START SERVER
+// ============================================================
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(
-    `Nirdidhay backend running on http://localhost:${PORT}`
+    `Nirdidhay backend running on port ${PORT}`
   );
 });
